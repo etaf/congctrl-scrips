@@ -3,5 +3,4 @@
 *.nam
 *.tr
 *.svg
-*.graphdir.*
-TCP.*
+results/*
