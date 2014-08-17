@@ -1,25 +1,36 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from optparse import OptionParser
 import os
 import subprocess
 cwd = os.getcwd()
 #===config=====================================================
-whisker_basedir = os.path.join(cwd,"../../../queue/kemy/jrats")
+whisker_basedir = os.path.join(cwd,"./jrats")
 results_basedir = os.path.join(cwd,'results')
-result_name = 'datacenter'
-iterations = 100
+result_name = 'Dumbbell'
+iterations = 1
 src_proto = "TCP"
 topo ="Dumbbell"
 nsrcs = [ 8 ]
 #conffile = "./kemyconf/adhoc-conf.tcl"
-conffile = "./kemyconf/datacenter.tcl"
+#conffile = "./kemyconf/datacenter.tcl"
+conffile = "./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl"
 results_dir = os.path.join(results_basedir, result_name)
-debugg = False
+Force = False
 #debugg = True
 #==============================================================
+
+
+parser = OptionParser()
+parser.add_option("-n", type="int", dest="iterations",
+                  default = iterations, help = "iterations")
+parser.add_option("-f", action = "store_true", dest="Force", default = False)
+(config, args) = parser.parse_args()
+
+iterations = config.iterations
 print "=================================================\n"
-if debugg == True:
+if config.Force == True:
     print "execing shell cmd: rm %s/results/* -rf\n" % cwd
     subprocess.call(['rm ./results/* -rf'],shell=True)
 
@@ -57,7 +68,7 @@ else:
 print "================generating graph=================================\n"
 ############ make graph #####################
 pre_graph_name = "graph-%d" % iterations
-os.chdir("../graphing-scripts")
+os.chdir("./graphing-scripts")
 subprocess.call("./graphmaker %s %s" % (results_dir,pre_graph_name), shell=True)
 os.chdir(cwd)
 for nsrc in nsrcs:

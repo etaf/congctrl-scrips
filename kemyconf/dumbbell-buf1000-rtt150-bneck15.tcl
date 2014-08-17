@@ -7,6 +7,18 @@ set opt(nsrc) 8;                # number of sources in experiment
 set opt(tcp) TCP/Rational
 set opt(sink) TCPSink
 set opt(cycle_protocols) false
+set protocols [list TCP/Rational TCP/Newreno TCP/Linux/cubic TCP/Linux/compound]; # don't put Linux TCPs first on list
+set protosinks [list TCPSink TCPSink TCPSink TCPSink]
+#set protocols [list TCP/Newreno TCP/Linux/cubic]
+#set protosinks [list TCPSink TCPSink/Sack1/DelAck]
+#set protocols [list TCP/Newreno TCP/Rational]
+#set protocols [list TCP/Newreno/Rational TCP/Linux/cubic ]
+#set protosinks [list TCPSink/Sack1 TCPSink/Sack1/DelAck]
+
+# topology parameters
+set opt(gw) DropTail;           # queueing at bottleneck
+set opt(bneck) 15Mb;             # bottleneck bandwidth (for some topos)
+set opt(maxq) 1000;             # max queue length at bottleneck
 set opt(rcvwin) 65536
 set opt(delay) 74ms;            # total one-way delay in topology
 set opt(link) None
