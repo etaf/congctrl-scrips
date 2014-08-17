@@ -1,0 +1,7 @@
+*.o
+*.png
+*.nam
+*.tr
+*.svg
+*.graphdir.*
+TCP.*

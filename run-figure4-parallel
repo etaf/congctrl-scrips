@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use Cwd;
+
+my $dir = getcwd;
+
+my $whiskerdir = $dir . q{/../../../queue/kemy/jrats/};
+print qq{doing: rm $dir/results/* -rf};
+system qq{rm $dir/results/* -rf};
+
+my $iterations = 1;
+my $src_proto = "TCP";
+for my $nsrc ( 8 ) { # maximum degree of multiplexing
+
+    system qq{python2.6 runkemy.py -c kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl -d results/Dumbbell  -q DropTail -p $src_proto -n $nsrc -a $iterations &};
+    system qq{python2.6 runkemy.py -c kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl -d results/Dumbbell  -q RED      -p $src_proto -n $nsrc -a $iterations &};
+    system qq{python2.6 runkemy.py -c kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl -d results/Dumbbell  -q Blue     -p $src_proto -n $nsrc -a $iterations &};
+    system qq{python2.6 runkemy.py -c kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl -d results/Dumbbell  -q CoDel    -p $src_proto -n $nsrc -a $iterations &};
+
+    $ENV{ WHISKERS } = $whiskerdir . q{delta1-alpha0.5-1d-gen.1};
+    system qq{python2.6 runkemy.py -c ./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl -d results/Dumbbell-kemyqueue-delta1   -q KEMY -p $src_proto -n $nsrc -a $iterations &};
+
+
+
+    }
+
+#chdir qq{$dir/../graphing-scripts} or die "chdir to ../graphing-scripts error:$!";
+#system qq{./graphmaker ../congctrl/results/};
+#chdir $dir or die "chdir to $dir error:$!";
+
+#system qq{display ./results/graphdir/graph-8.png};

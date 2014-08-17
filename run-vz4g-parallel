@@ -1,0 +1,37 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use Cwd;
+
+my $dir = getcwd;
+
+my $whiskerdir = $dir . q{/../../../queue/kemy/rats/};
+print qq{doing: rm $dir/results/* -rf};
+system qq{rm $dir/results/* -rf};
+
+my $iterations = 1;
+my $src_proto = "TCP";
+for my $nsrc ( 8 ) { # maximum degree of multiplexing
+    system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell  -q DropTail -p $src_proto -n $nsrc -a $iterations &};
+#    system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell  -q RED      -p $src_proto -n $nsrc -a $iterations &};
+    #system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell  -q Blue     -p $src_proto -n $nsrc -a $iterations &};
+    #system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell  -q CoDel    -p $src_proto -n $nsrc -a $iterations &};
+
+    ##$ENV{ WHISKERS } = $whiskerdir . q{delta-1-2d-18gen};
+    ##system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell-kemyqueue-delta1 -q KEMY -p $src_proto -n $nsrc -a $iterations &};
+
+    ##$ENV{ WHISKERS } = $whiskerdir . q{delta-0.1-2d-12gen};
+    ##system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell-kemyqueue-delta0.1 -q KEMY -p $src_proto -n $nsrc -a $iterations &};
+
+    #$ENV{ WHISKERS } = $whiskerdir . q{delta-1-3d-21gen};
+    #system qq{python2.6 runkemy.py -c kemyconf/vz4gdown.tcl -d results/Dumbbell-kemyqueue-delta1 -q KEMY -p $src_proto -n $nsrc -a $iterations &};
+
+
+    }
+
+#chdir qq{$dir/../graphing-scripts} or die "chdir to ../graphing-scripts error:$!";
+#system qq{./graphmaker ../congctrl/results/};
+#chdir $dir or die "chdir to $dir error:$!";
+
+#system qq{display ./results/graphdir/graph-8.png};
