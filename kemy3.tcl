@@ -275,7 +275,7 @@ proc finish {} {
 
 ## MAIN ##
 
-Agent/TCP set tcpTick_ .0001
+Agent/TCP set tcpTick_ .001
 Agent/TCP set timestamps_ true
 set opt(hdrsize) 50
 set opt(flowoffset) 40

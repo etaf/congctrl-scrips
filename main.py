@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
+import sys
 from optparse import OptionParser
 import os
 import subprocess
@@ -32,6 +32,9 @@ elif topo == 'datacenter':
     conffile = './kemyconf/datacenter.tcl'
 elif topo == '4g':
     conffile = "./kemyconf/vz4gdown.tcl"
+else:
+    print "not such topo suported"
+    sys.exit()
 
 results_dir = os.path.join(results_basedir, result_name)
 #==============================================================
@@ -39,8 +42,8 @@ results_dir = os.path.join(results_basedir, result_name)
 
 print "=================================================\n"
 if config.Force == True:
-    print "execing shell cmd: rm %s/results/* -rf\n" % cwd
-    subprocess.call(['rm ./results/* -rf'],shell=True)
+    print "execing shell cmd: rm %s/* -rf\n" % (results_dir)
+    subprocess.call(['rm %s/* -rf' % (results_dir)],shell=True)
 
 
 if not os.path.exists(results_basedir):
