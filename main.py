@@ -5,30 +5,38 @@ from optparse import OptionParser
 import os
 import subprocess
 cwd = os.getcwd()
-#===config=====================================================
-whisker_basedir = os.path.join(cwd,"./jrats")
-results_basedir = os.path.join(cwd,'results')
-result_name = 'Dumbbell'
-iterations = 1
-src_proto = "TCP"
-topo ="Dumbbell"
-nsrcs = [ 8 ]
-#conffile = "./kemyconf/adhoc-conf.tcl"
-#conffile = "./kemyconf/datacenter.tcl"
-conffile = "./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl"
-results_dir = os.path.join(results_basedir, result_name)
-Force = False
-#debugg = True
-#==============================================================
-
 
 parser = OptionParser()
 parser.add_option("-n", type="int", dest="iterations",
-                  default = iterations, help = "iterations")
+                  default = 1, help = "iterations")
 parser.add_option("-f", action = "store_true", dest="Force", default = False)
+parser.add_option("--result", type="string",dest="result_name",default="Dumbbell")
+parser.add_option("--topo", type="string", dest="topo",default="Dumbbell")
 (config, args) = parser.parse_args()
 
+#===config=====================================================
+whisker_basedir = os.path.join(cwd,"./jrats")
+results_basedir = os.path.join(cwd,'results')
 iterations = config.iterations
+result_name = config.result_name+"-"+str(iterations)
+src_proto = "TCP"
+topo = config.topo
+nsrcs = [ 8 ]
+topos = ['Dumbbell','adhoc','datacenter','4g']
+
+if topo == 'Dumbbell':
+    conffile = "./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl"
+elif topo == 'adhoc':
+    conffile = "./kemyconf/adhoc-conf.tcl"
+elif topo == 'datacenter':
+    conffile = './kemyconf/datacenter.tcl'
+elif topo == '4g':
+    conffile = "./kemyconf/vz4gdown.tcl"
+
+results_dir = os.path.join(results_basedir, result_name)
+#==============================================================
+
+
 print "=================================================\n"
 if config.Force == True:
     print "execing shell cmd: rm %s/results/* -rf\n" % cwd
@@ -58,7 +66,7 @@ else:
 
         childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q CoDel -p %s -n %d -a %d --topo=%s' % \
                 (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
-        os.environ['WHISKERS'] = os.path.join(whisker_basedir, 'delta1-alpha0.5-1d-gen.78')
+        os.environ['WHISKERS'] = os.path.join(whisker_basedir, 'delta1-alpha0.5-2d-gen.29')
         childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q KEMY -p %s -n %d -a %d --topo=%s' % \
                 (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
 

@@ -6,7 +6,7 @@ use Cwd;
 my $origdir = getcwd;
 
 my $MIN_RTT = 149.5; # ms
-#my $MIN_RTT = 2; # ms
+#my $MIN_RTT = 50; # ms
 
 use File::Path qw(make_path remove_tree);
 ###################################
