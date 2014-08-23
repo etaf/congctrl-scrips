@@ -69,7 +69,7 @@ else:
 
         childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q CoDel -p %s -n %d -a %d --topo=%s' % \
                 (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
-        os.environ['WHISKERS'] = os.path.join(whisker_basedir, 'delta1-alpha0.5-2d-gen.29')
+        os.environ['WHISKERS'] = os.path.join(whisker_basedir, 'delta1-alpha0.5-2d-gen.37')
         childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q KEMY -p %s -n %d -a %d --topo=%s' % \
                 (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
 
