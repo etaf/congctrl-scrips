@@ -143,8 +143,23 @@ proc create-dumbbell-topology {bneckbw delay} {
         $ns duplex-link $gw $d $bneckbw $delay $opt(gw)
     }
     if { [info exists opt(tr)] } {
+
 	$ns trace-queue $gw $d
+    set qm_file $opt(gw)
+    append qm_file ".out"
+    set qm [open $qm_file w]
+    set qmon [$ns monitor-queue $gw $d $qm 0.1]
+    [$ns link $gw $d] queue-sample-timeout
+
     }
+
+    #$ns trace-queue $gw $d
+    #set qm_file $opt(gw)
+    #append qm_file ".out"
+    #set qm [open $qm_file w]
+    #set qmon [$ns monitor-queue $gw $d $qm 0.1]
+    #[$ns link $gw $d] queue-sample-timeout
+
     $ns queue-limit $gw $d $opt(maxq)
     $ns queue-limit $d $gw $opt(maxq)
     if { $opt(gw) == "XCP" } {
@@ -171,11 +186,11 @@ proc create-adhoc-sources-sinks {} {
         $tcpsrc set window_ $opt(rcvwin)
         $tcpsrc set packetSize_ $opt(pktsize)
         if { [info exists opt(tr)] } {
-            $tcpsrc trace cwnd_
-            $tcpsrc trace rtt_
-            $tcpsrc trace maxseq_
-            $tcpsrc trace ack_
-            $tcpsrc attach $f
+            #$tcpsrc trace cwnd_
+            #$tcpsrc trace rtt_
+            #$tcpsrc trace maxseq_
+            #$tcpsrc trace ack_
+            #$tcpsrc attach $f
         }
 
         set src($i) [ $tcpsrc attach-app $opt(app) ]

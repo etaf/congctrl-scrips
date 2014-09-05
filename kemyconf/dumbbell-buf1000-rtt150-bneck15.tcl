@@ -19,7 +19,7 @@ set protosinks [list TCPSink TCPSink TCPSink TCPSink]
 set opt(gw) DropTail;           # queueing at bottleneck
 set opt(bneck) 15Mb;             # bottleneck bandwidth (for some topos)
 set opt(maxq) 1000;             # max queue length at bottleneck
-set opt(rcvwin) 65536
+set opt(rcvwin) 65536;
 set opt(delay) 74ms;            # total one-way delay in topology
 set opt(link) None
 
@@ -38,7 +38,8 @@ set opt(ontype) "bytes";           # valid options are "bytes" and "flowcdf"
 set opt(reset) "false";             # reset TCP on end of ON period
 
 # simulator parameters
-set opt(simtime) 100.0;        # total simulated time
+#set opt(simtime) 100.0;        # total simulated time
+set opt(simtime) 1000.0;        # total simulated time
 #set opt(tr) remyout;            # output trace in opt(tr).out
 set opt(partialresults) false;   # show partial throughput, delay, and utility?
 set opt(verbose) false;          # verbose printing for debugging (esp stats)
