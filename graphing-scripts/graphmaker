@@ -6,8 +6,9 @@ use Cwd;
 my $origdir = getcwd;
 
 #my $MIN_RTT = 149.5; # ms
+#my $MIN_RTT = 299; # ms
 #my $MIN_RTT = 50; # ms
-my $MIN_RTT = 0; # ms
+#my $MIN_RTT = 0; # ms
 
 use File::Path qw(make_path remove_tree);
 ###################################
@@ -15,8 +16,7 @@ use File::Path qw(make_path remove_tree);
 # This program generates the throughput-delay plots seen in
 # "TCP ex Machina: Computer-Generated Congestion Control."
 #
-#
-# Example: $ ./graphmaker ../congctrl/results/
+# # Example: $ ./graphmaker ../congctrl/results/
 #
 # will write SVG to ../congctrl/results/graphdir/graph-8.svg
 # and PNG to ../congctrl/results/graphdir/graph-8.png
@@ -25,13 +25,14 @@ use File::Path qw(make_path remove_tree);
 #
 ###################################
 
-unless ( 2 == scalar @ARGV ) {
+unless ( 3 == scalar @ARGV ) {
   print STDERR "Usage: $0 DIRECTORY graph-name\n";
   exit;
 }
 
 my ($dir) = $ARGV[0];
 my $pre_graph_name = $ARGV[1];
+my $MIN_RTT = $ARGV[2];
 #print STDERR "results dir: $dir\n";
 my %protos;
 my %nsrcs;
@@ -83,6 +84,13 @@ sub median {
   }
 
   return $median;
+}
+use List::Util qw/sum/;
+sub average {
+    my $x = sum @_;
+    my $n = scalar @_;
+    my $avg = $x / $n;
+    return $avg;
 }
 mkdir( "$dir/graphdir" ) or die "Found ${dir}graphdir directory from previous run. This needs to be deleted.\n";
 chdir( "$dir/graphdir" ) or die "can't enter directory $dir/graphdir: $!";
@@ -201,6 +209,7 @@ HERE
 #    $protos{ $nsrc }{ $protocol }{ means }[ 1 ] += .1;
 
     print GNUPLOT qq<set label "$nicename" at $protos{ $nsrc }{ $queue_protocol }{ medians }[ 0 ],$protos{ $nsrc }{ $queue_protocol }{ medians }[ 1 ] point textcolor lt 1\n>;
+    #print GNUPLOT qq<set label "$nicename" at $protos{ $nsrc }{ $queue_protocol }{ means }[ 0 ],$protos{ $nsrc }{ $queue_protocol }{ means }[ 1 ] point textcolor lt 1\n>;
 
     push @plotcmd, qq<"$queue_protocol-$nsrc.ellipse" with lines lt 1>;
 #    push @dotcmd, qq<"$protocol-$nsrc.pts" with dots lt $protocount>;

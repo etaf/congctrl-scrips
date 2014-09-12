@@ -111,8 +111,71 @@ proc create-adhoc-topology {bneckbw delay} {
     }
 
 }
-
 #
+# Create a square topology.
+#
+#       O                  O
+#        \                /
+#          O------------O
+#        / |            | \
+#       O  |            |  O
+#          |            |
+#       O  |            |  O
+#        \ |            | /
+#          O------------O
+#        /                \
+#       O                  O
+#
+#
+proc create-square-topology {bneckbw delay} {
+    global ns opt tp src recvapp
+
+    set nsender $opt(nsrc)
+   #create gw
+    for {set i 0} {$i < 4} {incr i} {
+        set gws($i) [$ns node]
+    }
+    #create senders
+    for {set i 0} {$i < $nsender} {incr i} {
+        set senders($i) [$ns node]
+    }
+    #create receivers
+    for {set i 0} {$i < 4} {incr i} {
+        set receivers($i) [$ns node]
+    }
+    #create link between gws
+    for {set i 0} {$i < 4} {incr i} {
+        $ns duplex-link $gws($i) $gws([expr ($i+1)%4 ]) $bneckbw $delay  $opt(gw)
+
+    }
+    #create link between gw and sender
+    for {set i 0} {$i < $nsender} {incr i} {
+        $ns duplex-link $senders($i) $gws([expr $i/($nsender/4)]) 1000Mb 1ms $opt(gw)
+    }
+    #create link between gw and receiver
+    for {set i 0} {$i < 4} {incr i} {
+        $ns duplex-link $receivers($i) $gws($i) 1000Mb 1ms $opt(gw)
+    }
+   #apply tcl sink
+    for {set i 0} {$i < $nsender} {incr i} {
+
+         set tp($i) [$ns create-connection-list $opt(tcp) $senders($i) $opt(sink) $receivers([expr (($i/($nsender/4))+2)%4]) $i]
+         set tcpsrc [lindex $tp($i) 0]
+         set tcpsink [lindex $tp($i) 1]
+         $tcpsrc set fid_ [expr $i%256]
+         $tcpsrc set window_ $opt(rcvwin)
+         $tcpsrc set packetSize_ $opt(pktsize)
+
+         set src($i) [ $tcpsrc attach-app $opt(app) ]
+         $src($i) setup_and_start $i $tcpsrc
+         set recvapp($i) [new LoggingApp $i]
+         $recvapp($i) attach-agent $tcpsink
+         $ns at 0.0 "$recvapp($i) start"
+    }
+
+
+}
+
 # Create a simple dumbbell topology.
 #
 proc create-dumbbell-topology {bneckbw delay} {
@@ -174,7 +237,6 @@ proc create-dumbbell-topology {bneckbw delay} {
 }
 
 proc create-adhoc-sources-sinks {} {
-
     global ns opt s src recvapp tp protocols protosinks f
     set numsrc $opt(nsrc)
     for {set i 0} {$i < $numsrc} {incr i} {
@@ -238,16 +300,6 @@ proc create-sources-sinks {} {
     }
 }
 
-proc create-parkinglot-topology { bneck delay } {
-    global ns opt
-
-
-}
-
-proc create-tree-topology { bneck delay } {
-
-}
-
 proc finish {} {
     global ns opt stats src recvapp linuxcc
     global f nf
@@ -302,7 +354,7 @@ Getopt
 if { [info exists opt(gw)] } {
     set wireless_config(ifq) "Queue/$opt(gw)"
 }
-puts "AMQ: $wireless_config(ifq)"
+#puts "AMQ: $wireless_config(ifq)"
 #set opt(rcvwin) [expr int(32*$opt(maxq))]
 
 if { ![info exists opt(spike)] } {
@@ -334,7 +386,14 @@ if { $opt(ontype) == "flowcdf" } {
     source $flowfile
 }
 
-if { $opt(topo) == "adhoc"} {
+if {$opt(topo) == "square"} {
+   if { [info exists opt(nam)] } {
+        set nf [open square.nam w]
+        $ns namtrace-all $nf
+   }
+   create-square-topology $opt(bneck) $opt(delay)
+
+} elseif { $opt(topo) == "adhoc"} {
     if { [info exists opt(nam)] } {
         set nf [open adhoc.nam w]
         $ns namtrace-all-wireless $nf $wireless_config(x) $wireless_config(y)

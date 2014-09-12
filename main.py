@@ -12,7 +12,7 @@ parser.add_option("-n", type="int", dest="iterations",
 parser.add_option("-f", action = "store_true", dest="Force", default = False)
 parser.add_option("--result", type="string",dest="result_name",default="Dumbbell")
 parser.add_option("--topo", type="string", dest="topo",default="Dumbbell")
-parser.add_option("-w","--whiskers",  type="string",dest="whiskers")
+parser.add_option("-w","--whiskers",  type="string",dest="whiskers", default="./jrats/delta1-alpha0.5-1d-gen.78")
 (config, args) = parser.parse_args()
 #===config=====================================================
 whiskers_dir = config.whiskers
@@ -27,12 +27,17 @@ topos = ['Dumbbell','adhoc','datacenter','4g']
 
 if topo == 'Dumbbell':
     conffile = "./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl"
+    MIN_RTT = 149.5
 elif topo == 'adhoc':
     conffile = "./kemyconf/adhoc-conf.tcl"
+    MIN_RTT = 0
 elif topo == 'datacenter':
     conffile = './kemyconf/datacenter.tcl'
 elif topo == '4g':
     conffile = "./kemyconf/vz4gdown.tcl"
+elif topo == 'square':
+    conffile = "./kemyconf/square.tcl"
+    MIN_RTT = 300
 else:
     print "not such topo suported"
     sys.exit()
@@ -81,7 +86,7 @@ print "================generating graph=================================\n"
 ############ make graph #####################
 pre_graph_name = "graph-%d" % iterations
 os.chdir("./graphing-scripts")
-subprocess.call("./graphmaker %s %s" % (results_dir,pre_graph_name), shell=True)
+subprocess.call("./graphmaker %s %s %f" % (results_dir,pre_graph_name,MIN_RTT), shell=True)
 os.chdir(cwd)
 for nsrc in nsrcs:
     subprocess.Popen("display %s" % os.path.join(results_dir,'graphdir','%s-%d.png' % (pre_graph_name,nsrc)),shell=True)
