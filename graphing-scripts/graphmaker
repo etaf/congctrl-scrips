@@ -113,8 +113,9 @@ for my $nsrc ( keys %protos ) {
     while ( <DATA> ) {
       next unless m{^conn:};
 
-      my ( $mbps, $fct, $rtt, $onperc ) = m{rMbps: (.*?) fctMs: (.*?) .*?sndrttMs (.*?) .*?onperc: (.*?)$};
-
+      #my ( $mbps, $fct, $rtt, $onperc ) = m{rMbps: (.*?) fctMs: (.*?) .*?sndrttMs (.*?) .*?onperc: (.*?)$};
+      my ($fct, $mbps, $rtt, $onperc ) =  m{fctMs: (.*?) aMbps: (.*?) .*?sndrttMs (.*?) .*?onperc: (.*?)$};
+      #print STDERR "========================= $mbps $rtt\n";
       if ( not defined $rtt ) {
 	die "line did not match pattern: $_";
       } elsif ( $onperc == 0 ) {

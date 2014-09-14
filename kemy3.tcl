@@ -146,7 +146,6 @@ proc create-square-topology {bneckbw delay} {
     #create link between gws
     for {set i 0} {$i < 4} {incr i} {
         $ns duplex-link $gws($i) $gws([expr ($i+1)%4 ]) $bneckbw $delay  $opt(gw)
-
     }
     #create link between gw and sender
     for {set i 0} {$i < $nsender} {incr i} {
@@ -159,7 +158,11 @@ proc create-square-topology {bneckbw delay} {
    #apply tcl sink
     for {set i 0} {$i < $nsender} {incr i} {
 
-         set tp($i) [$ns create-connection-list $opt(tcp) $senders($i) $opt(sink) $receivers([expr (($i/($nsender/4))+2)%4]) $i]
+         if {[expr $i%2] == 0} {
+             set tp($i) [$ns create-connection-list $opt(tcp) $senders($i) $opt(sink) $receivers([expr (($i/($nsender/4))+2)%4]) $i]
+         } else {
+             set tp($i) [$ns create-connection-list $opt(tcp) $senders($i) $opt(sink) $receivers([expr (($i/($nsender/4))+1)%4]) $i]
+         }
          set tcpsrc [lindex $tp($i) 0]
          set tcpsink [lindex $tp($i) 1]
          $tcpsrc set fid_ [expr $i%256]

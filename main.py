@@ -22,7 +22,7 @@ iterations = config.iterations
 result_name = config.result_name+"-"+str(iterations)
 src_proto = "TCP"
 topo = config.topo
-nsrcs = [ 8 ]
+nsrcs = [ 16 ]
 topos = ['Dumbbell','adhoc','datacenter','4g']
 
 if topo == 'Dumbbell':
