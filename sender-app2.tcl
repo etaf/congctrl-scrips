@@ -53,12 +53,10 @@ Application/FTP/OnOffSender instproc setup_and_start { id tcp } {
             $ns at [expr [$ns now] + $opt(spikestart)] "$self send $opt(spikeduration)"
         }
     } else {
-#         $ns at [expr 0.5*[$off_ranvar_ value]] \
-            #"$self send $opt(avgbytes)"
-       $ns at [expr 0.5*[$off_ranvar_ value]] \
-            "$self send [$on_ranvar_ value]"
-
-
+         $ns at [expr 0.5*[$off_ranvar_ value]] \
+            "$self send $opt(avgbytes)"
+ #      $ns at [expr 0.5*[$off_ranvar_ value]] \
+            #"$self send [$on_ranvar_ value]"
     }
 }
 
@@ -154,8 +152,6 @@ Application/FTP/OnOffSender instproc timeout {} {
         if { $opt(spike) != "true" } {
 #           $ns at [expr [$ns now]  +[$off_ranvar_ value]] \
                 #"$self send $opt(avgbytes)"
-           $ns at [expr [$ns now]  +[$off_ranvar_ value]] \
-                "$self send [$on_ranvar_ value]"
         }
     } else {
         # still the same connection

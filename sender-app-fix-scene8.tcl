@@ -16,13 +16,22 @@ Application/FTP/OnOffSender instproc init {} {
 }
 
 Application/FTP/OnOffSender instproc setup_and_start { id tcp } {
-    $self instvar id_ tcp_ stats_ on_ranvar_ off_ranvar_
+    $self instvar id_ tcp_ stats_ on_ranvar_ off_ranvar_ etaf_ons etaf_offs etaf_now etaf_run
     global ns opt
-
     set id_ $id
     set tcp_ $tcp
     set stats_ [new Stats $id]
     set run [expr $opt(seed) + 2]
+
+    set scene_fp [open "./onoffscene/sender$id_" r]
+    while { -1 != [gets $scene_fp line] } {
+        set etaf_vs [split $line " "]
+        lappend etaf_offs [lindex $etaf_vs 0]
+        lappend etaf_ons  [lindex $etaf_vs 1]
+    }
+    set etaf_run [llength $etaf_ons]
+    set etaf_now 0
+
     if { $opt(ontype) == "bytes" || $opt(ontype) == "time" } {
         set on_rng [new RNG]
         for { set j 1 } {$j < $run} {incr j} {
@@ -55,9 +64,11 @@ Application/FTP/OnOffSender instproc setup_and_start { id tcp } {
     } else {
 #         $ns at [expr 0.5*[$off_ranvar_ value]] \
             #"$self send $opt(avgbytes)"
-       $ns at [expr 0.5*[$off_ranvar_ value]] \
-            "$self send [$on_ranvar_ value]"
-
+       if { $etaf_now < $etaf_run } {
+        $ns at [expr 0.5*[lindex $etaf_offs $etaf_now]] \
+            "$self send [lindex $etaf_ons $etaf_now]"
+        incr etaf_now
+       }
 
     }
 }
@@ -113,7 +124,8 @@ Application/FTP/OnOffSender instproc cancel {} {
 
 Application/FTP/OnOffSender instproc timeout {} {
     global ns opt
-    $self instvar id_ tcp_ stats_ on_duration_ sentinel_ npkts_ laststart_ lastrtt_ lastack_ on_ranvar_ off_ranvar_
+    $self instvar id_ tcp_ stats_ on_duration_ sentinel_ npkts_ laststart_ lastrtt_ lastack_ on_ranvar_ off_ranvar_ etaf_ons etaf_offs etaf_now etaf_run
+
 
     set done false
     set rtt [expr [$tcp_ set rtt_] * [$tcp_ set tcpTick_] ]
@@ -154,8 +166,12 @@ Application/FTP/OnOffSender instproc timeout {} {
         if { $opt(spike) != "true" } {
 #           $ns at [expr [$ns now]  +[$off_ranvar_ value]] \
                 #"$self send $opt(avgbytes)"
-           $ns at [expr [$ns now]  +[$off_ranvar_ value]] \
-                "$self send [$on_ranvar_ value]"
+            if { $etaf_now < $etaf_run } {
+
+                $ns at [expr [$ns now]  +[lindex $etaf_offs $etaf_now] ] \
+                "$self send [lindex $etaf_ons $etaf_now]"
+                incr etaf_now
+            }
         }
     } else {
         # still the same connection

@@ -19,14 +19,15 @@ whiskers_dir = config.whiskers
 results_basedir = os.path.join(cwd,'results')
 
 iterations = config.iterations
-result_name = config.result_name+"-"+str(iterations)
+result_name = config.result_name
 src_proto = "TCP"
 topo = config.topo
-nsrcs = [ 8 ]
-topos = ['Dumbbell','adhoc','datacenter','4g']
+nsrc = 8
+qlens = [10, 20, 30, 40, 50,75,100, 150, 200, 300]
+topos = ['Dumbbell','adhoc','datacenter','4g','square']
 
 if topo == 'Dumbbell':
-    conffile = "./kemyconf/dumbbell-buf1000-rtt150-bneck15.tcl"
+    conffile = "./kemyconf/dumbbell-compare-buf.tcl"
     MIN_RTT = 149.5
 elif topo == 'adhoc':
     conffile = "./kemyconf/adhoc-conf.tcl"
@@ -60,35 +61,35 @@ if  os.path.exists(results_dir):
 
 else:
     os.mkdir(results_dir)
+    os.mkdir(os.path.join(results_dir, "tr"))
     print "saving results to %s\n" % results_dir
 
     print "=================================================\n"
     childs = []
-    for nsrc in nsrcs:
-        childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q DropTail -p %s -n %d -a %d --topo=%s' % \
-                (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
+    for qlen in qlens:
+        childs.append(subprocess.Popen('python runkemy2.py -c %s -d %s -q DropTail  -a %d --topo=%s -b %d' % \
+                (conffile,results_dir,iterations,topo,qlen),shell=True))
         if not topo == 'adhoc':
-            childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q Blue -p %s -n %d -a %d --topo=%s' % \
-                (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
-        childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q RED -p %s -n %d -a %d --topo=%s' % \
-                (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
+            childs.append(subprocess.Popen('python runkemy2.py -c %s -d %s -q Blue  -a %d --topo=%s -b %d' % \
+                (conffile,results_dir,iterations,topo,qlen),shell=True))
+        childs.append(subprocess.Popen('python runkemy2.py -c %s -d %s -q RED  -a %d --topo=%s -b %d' % \
+                (conffile,results_dir,iterations,topo,qlen),shell=True))
 
-        childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q CoDel -p %s -n %d -a %d --topo=%s' % \
-                (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
+        childs.append(subprocess.Popen('python runkemy2.py -c %s -d %s -q CoDel  %d --topo=%s -b %d' % \
+                (conffile,results_dir,iterations,topo,qlen),shell=True))
         os.environ['WHISKERS'] = config.whiskers
-        childs.append(subprocess.Popen('python runkemy.py -c %s -d %s -q KEMY -p %s -n %d -a %d --topo=%s' % \
-                (conffile,results_dir,src_proto,nsrc,iterations,topo),shell=True))
+        childs.append(subprocess.Popen('python runkemy2.py -c %s -d %s -q KEMY  %d --topo=%s -b %d' % \
+                (conffile,results_dir,iterations,topo,qlen),shell=True))
 
         for child in childs:
             child.wait()
 
 print "================generating graph=================================\n"
 ############ make graph #####################
-pre_graph_name = "graph-%d" % iterations
+pre_graph_name = "graph-compare-bufferbloat"
 os.chdir("./graphing-scripts")
-subprocess.call("./graphmaker %s %s %f" % (results_dir,pre_graph_name,MIN_RTT), shell=True)
+subprocess.call("./graphmaker-bufferbloat %s %s %f" % (results_dir,pre_graph_name,MIN_RTT), shell=True)
 os.chdir(cwd)
-for nsrc in nsrcs:
-    subprocess.Popen("display %s" % os.path.join(results_dir,'graphdir','%s-%d.png' % (pre_graph_name,nsrc)),shell=True)
+#subprocess.Popen("display %s" % os.path.join(results_dir,'graphdir','%s.svg' % (pre_graph_name)),shell=True)
 #############################################
 

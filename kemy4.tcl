@@ -25,7 +25,8 @@ if [info exists env(nshome)] {
 }
 set env(PATH) "$nshome/bin:$env(PATH)"
 
-source ./sender-app-trace-onoff.tcl
+source ./sender-app-fix-scene8.tcl
+#source ./sender-app-trace-onoff.tcl
 source logging-app2.tcl
 source stats.tcl
 
@@ -285,15 +286,15 @@ proc create-sources-sinks {} {
         $tcpsrc set packetSize_ $opt(pktsize)
 
         if { [info exists opt(tr)] } {
-            $tcpsrc trace cwnd_
-            $tcpsrc trace rtt_
-            $tcpsrc trace maxseq_
-            $tcpsrc trace ack_
-            if { $opt(tcp) == "TCP/Rational" } {
-                $tcpsrc trace _intersend_time
-            }
-            $tcpsrc attach $f
-        }
+#            $tcpsrc trace cwnd_
+            #$tcpsrc trace rtt_
+            #$tcpsrc trace maxseq_
+            #$tcpsrc trace ack_
+            #if { $opt(tcp) == "TCP/Rational" } {
+                #$tcpsrc trace _intersend_time
+            #}
+            #$tcpsrc attach $f
+#        }
 
         set src($i) [ $tcpsrc attach-app $opt(app) ]
         $src($i) setup_and_start $i $tcpsrc

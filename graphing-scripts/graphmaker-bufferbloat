@@ -1,0 +1,252 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+
+my $origdir = getcwd;
+
+use File::Path qw(make_path remove_tree);
+###################################
+#
+# This program generates the throughput-delay plots seen in
+# "TCP ex Machina: Computer-Generated Congestion Control."
+#
+# # Example: $ ./graphmaker ../congctrl/results/
+#
+# will write SVG to ../congctrl/results/graphdir/graph-8.svg
+# and PNG to ../congctrl/results/graphdir/graph-8.png
+#
+# MIN_RTT (above) must be adjusted to the minRTT of the link.
+#
+###################################
+
+unless ( 3 == scalar @ARGV ) {
+  print STDERR "Usage: $0 DIRECTORY graph-name\n";
+  exit;
+}
+
+my ($dir) = $ARGV[0];
+my $pre_graph_name = $ARGV[1];
+my $MIN_RTT = $ARGV[2];
+#print STDERR "results dir: $dir\n";
+my %protos;
+
+for ( glob "$dir/*" ) {
+  #print STDERR "dir in results: $_ \n";
+  if ( m{graphdir} ) {
+    #die "Found ${dir}graphdir directory from previous run. This needs to be deleted.\n";
+    #system qq{rm -r $dir/graphdir};
+    print STDERR "removing existed graphdir:$_ \n";
+    remove_tree("$dir/graphdir");
+    print STDERR "removed!\n";
+    next;
+  }
+  my ($queue_protocol) = m{.*/(.*?)\..*\.};
+  my ($buffer_size) = m{.*/.*\.buffersize(.*?)\.};
+  my ($nsrc) = 8;
+  #print STDERR "queue_protocol: $queue_protocol\n";
+  #print STDERR "buffer_size: $buffer_size\n";
+  if (defined $queue_protocol and defined $buffer_size) {
+      $protos{$queue_protocol}{$buffer_size}{ filename } = $_;
+  }
+  #print STDERR "protos: $protos{ $queue_protocol }{ filename } \n ";
+#  print STDERR "protocol $protocol\n";
+}
+
+my %trs;
+for ( glob "$dir/tr/*" ) {
+  #print STDERR "dir in results: $_ \n";
+  my ($queue_protocol) = m{.*/(.*?)\..*\.};
+  my ($buffer_size) = m{.*/.*\.buffersize(.*?)\.};
+  #print STDERR "queue_protocol: $queue_protocol\n";
+  #print STDERR "buffer_size: $buffer_size\n";
+  if (defined $queue_protocol and defined $buffer_size) {
+      $trs{$queue_protocol}{$buffer_size}{ filename } = $_;
+      #print STDERR "tr: $trs{ $queue_protocol }{$buffer_size}{ filename } \n ";
+  }
+}
+sub median {
+  my $n = scalar @_;
+  @_ = sort { $a <=> $b } @_;
+  my $median;
+  if ( $n % 2 == 1 ) {
+    $median = $_[ int($n / 2) ] + 0;
+  } else {
+    $median = $_[ int($n / 2) ] + $_[ int($n / 2) - 1 ];
+    $median /= 2;
+  }
+
+  return $median;
+}
+mkdir( "$dir/graphdir" ) or die "Found ${dir}graphdir directory from previous run. This needs to be deleted.\n";
+chdir( "$dir/graphdir" ) or die "can't enter directory $dir/graphdir: $!";
+
+for my $queue_protocol ( keys %protos ) {
+  my ( $rttmin, $rttmax ) = ( 10000000000, -10000000000 );
+  my ( $mbpsmin, $mbpsmax ) = ( 10000000000, -10000000000 );
+
+  open OUTDATA, "> $queue_protocol.pts" or die;
+  for my $buffer_size ( keys %{ $protos{ $queue_protocol } } ) {
+    my $filename = $protos{ $queue_protocol }{ $buffer_size }{ filename };
+    my $tr_file = $trs{ $queue_protocol}{$buffer_size}{filename};
+    #print STDERR "!!!!!!!!!!processing $filename\n";
+    my ( $rtt_tot, $mbps_tot, $count );
+
+    open INDATA,  $filename or die "can't open $filename: $!";
+    #open ELLIPSE, "|$origdir/ellipsemaker > $queue_protocol-$nsrc.ellipse" or die;
+    my @rtts = ();
+    my @mbpss = ();
+    while ( <INDATA> ) {
+      next unless m{^conn:};
+
+      #my ( $mbps, $fct, $rtt, $onperc ) = m{rMbps: (.*?) fctMs: (.*?) .*?sndrttMs (.*?) .*?onperc: (.*?)$};
+      my ($fct, $mbps, $rtt, $onperc) =  m{fctMs: (.*?) aMbps: (.*?) .*?sndrttMs (.*?) .*?onperc: (.*?)$};
+      #print STDERR "========================= $mbps $rtt\n";
+      if ( not defined $rtt ) {
+	die "line did not match pattern: $_";
+      } elsif ( $onperc == 0 ) {
+	print STDERR "WARNING: sender was never on: $_";
+	next;
+      }
+
+      #$rtt -= $MIN_RTT;
+      push @rtts, $rtt + 0;
+      #$rtt = log( $rtt ) / log( 2 );
+      $count++;
+      $rtt_tot += $rtt;
+      $mbps_tot += $mbps;
+      push @mbpss, $mbps;
+    }
+    close INDATA or die;
+    my $rttmed = log( median( @rtts ) ) / log( 2 );
+    my $mbpsmed = median( @mbpss );
+
+    $protos{ $queue_protocol }{ $buffer_size }{ means } = [ $rtt_tot / $count, $mbps_tot / $count ];
+    $protos{ $queue_protocol }{ $buffer_size }{ medians } = [ $rttmed, $mbpsmed ];
+    my $loss_rate = `awk -f ../../../measure-loss.awk $tr_file`;
+    $loss_rate = $loss_rate * 100;
+    print OUTDATA "$buffer_size $protos{ $queue_protocol }{ $buffer_size }{ means }[0] $protos{ $queue_protocol }{ $buffer_size }{ means }[1] $loss_rate\n";
+
+ }
+
+  close OUTDATA or die;
+
+  system( "sort -n -k1 $queue_protocol.pts -o $queue_protocol.pts" );
+}
+
+
+
+
+  my @xtic_locations = map{ 2**$_ } ( 0 .. 15 );
+  my @xtic_strings = map { qq{"$_" log($_)/log(2)} } @xtic_locations;
+
+  my $xtic_instruction = qq{set xtics (} . (join ", ", @xtic_strings) . qq{)};
+
+#################rtt#############################################################
+  my $graph_name = "$pre_graph_name.rtt";
+  open GNUPLOT, ">$graph_name.gnu" or die;
+
+#  $rttmin *= 0.8;
+#  $rttmax *= 1.1;
+#  $mbpsmin *= 0.8;
+#  $mbpsmax *= 1.1;
+print GNUPLOT <<"HERE";
+
+set xlabel "buffer size (pkg)"
+set ylabel "average rtt (ms)"
+set grid
+
+set terminal svg fsize 12
+set output "$graph_name.svg"
+HERE
+
+
+  my @plotcmd;
+
+  my $protocount = 1;
+  for my $queue_protocol ( keys %protos  ) {
+    push @plotcmd, qq<"$queue_protocol.pts" u 1:2  w lp title "$queue_protocol" >;
+  }
+
+  my $plotcmd = join ", ", @plotcmd;
+  print GNUPLOT "plot $plotcmd\nset output\n";
+
+  close GNUPLOT or die;
+
+  print STDERR "Writing SVG to ${dir}/graphdir/$graph_name.svg\n";
+
+  system( "gnuplot -p $graph_name.gnu" );
+  system( "display ${dir}/graphdir/$graph_name.svg &");
+
+#################throughput#############################################################
+  my $graph_name = "$pre_graph_name.throughput";
+  open GNUPLOT, ">$graph_name.gnu" or die;
+
+#  $rttmin *= 0.8;
+#  $rttmax *= 1.1;
+#  $mbpsmin *= 0.8;
+#  $mbpsmax *= 1.1;
+print GNUPLOT <<"HERE";
+
+set xlabel "buffer size (pkg)"
+set ylabel "throughput (Mbps)"
+set grid
+
+set terminal svg fsize 12
+set output "$graph_name.svg"
+HERE
+
+
+  my @plotcmd;
+
+  my $protocount = 1;
+  for my $queue_protocol ( keys %protos  ) {
+    push @plotcmd, qq<"$queue_protocol.pts" u 1:3  w lp title "$queue_protocol" >;
+  }
+
+  my $plotcmd = join ", ", @plotcmd;
+  print GNUPLOT "plot $plotcmd\nset output\n";
+
+  close GNUPLOT or die;
+
+  print STDERR "Writing SVG to ${dir}/graphdir/$graph_name.svg\n";
+
+  system( "gnuplot -p $graph_name.gnu" );
+  system( "display ${dir}/graphdir/$graph_name.svg &");
+
+#################loss rate#############################################################
+  my $graph_name = "$pre_graph_name.lossrate";
+  open GNUPLOT, ">$graph_name.gnu" or die;
+
+#  $rttmin *= 0.8;
+#  $rttmax *= 1.1;
+#  $mbpsmin *= 0.8;
+#  $mbpsmax *= 1.1;
+print GNUPLOT <<"HERE";
+
+set xlabel "buffer size (pkg)"
+set ylabel "packet drop rate"
+set format y "%.2f%%"
+set grid
+
+set terminal svg fsize 12
+set output "$graph_name.svg"
+HERE
+
+
+  my @plotcmd;
+
+  my $protocount = 1;
+  for my $queue_protocol ( keys %protos  ) {
+    push @plotcmd, qq<"$queue_protocol.pts" u 1:4  w lp title "$queue_protocol" >;
+  }
+
+  my $plotcmd = join ", ", @plotcmd;
+  print GNUPLOT "plot $plotcmd\nset output\n";
+
+  close GNUPLOT or die;
+
+  print STDERR "Writing SVG to ${dir}/graphdir/$graph_name.svg\n";
+
+  system( "gnuplot -p $graph_name.gnu" );
+  system( "display ${dir}/graphdir/$graph_name.svg &");

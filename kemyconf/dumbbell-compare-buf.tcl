@@ -3,8 +3,8 @@
 global opt
 
 # source, sink, and app types
-set opt(nsrc) 16;                # number of sources in experiment
-set opt(tcp) TCP/Rational
+set opt(nsrc) 8;                # number of sources in experiment
+set opt(tcp) TCP
 set opt(sink) TCPSink
 set opt(cycle_protocols) false
 set protocols [list TCP/Rational TCP/Newreno TCP/Linux/cubic TCP/Linux/compound]; # don't put Linux TCPs first on list
@@ -38,11 +38,12 @@ set opt(ontype) "bytes";           # valid options are "bytes" and "flowcdf"
 set opt(reset) "false";             # reset TCP on end of ON period
 
 # simulator parameters
-set opt(simtime) 100.0;        # total simulated time
-#set opt(simtime) 500.0;        # total simulated time
+#set opt(simtime) 100.0;        # total simulated time
+set opt(simtime) 1000.0;        # total simulated time
 #set opt(tr) remyout;            # output trace in opt(tr).out
 set opt(partialresults) false;   # show partial throughput, delay, and utility?
-set opt(verbose) true;          # verbose printing for debugging (esp stats)
+set opt(verbose) false;          # verbose printing for debugging (esp stats)
+#set opt(verbose) true;          # verbose printing for debugging (esp stats)
 set opt(checkinterval) 0.005;        # check stats every 5 ms
 
 # utility and scoring
