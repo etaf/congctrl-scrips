@@ -31,7 +31,6 @@ Application/FTP/OnOffSender instproc setup_and_start { id tcp } {
     }
     set etaf_run [llength $etaf_ons]
     set etaf_now 0
-
     if { $opt(ontype) == "bytes" || $opt(ontype) == "time" } {
         set on_rng [new RNG]
         for { set j 1 } {$j < $run} {incr j} {
@@ -164,8 +163,6 @@ Application/FTP/OnOffSender instproc timeout {} {
             }
         }
         if { $opt(spike) != "true" } {
-#           $ns at [expr [$ns now]  +[$off_ranvar_ value]] \
-                #"$self send $opt(avgbytes)"
             if { $etaf_now < $etaf_run } {
 
                 $ns at [expr [$ns now]  +[lindex $etaf_offs $etaf_now] ] \

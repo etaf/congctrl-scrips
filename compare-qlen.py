@@ -24,6 +24,7 @@ src_proto = "TCP"
 topo = config.topo
 nsrc = 8
 qlens = [10, 20, 30, 40, 50,75,100, 150, 200, 300]
+#qlens = [1000]
 topos = ['Dumbbell','adhoc','datacenter','4g','square']
 
 if topo == 'Dumbbell':

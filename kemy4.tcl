@@ -27,6 +27,7 @@ set env(PATH) "$nshome/bin:$env(PATH)"
 
 source ./sender-app-fix-scene8.tcl
 #source ./sender-app-trace-onoff.tcl
+#source ./sender-app.tcl
 source logging-app2.tcl
 source stats.tcl
 
